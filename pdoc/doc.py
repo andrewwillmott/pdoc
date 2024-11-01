@@ -91,15 +91,15 @@ class Doc(Generic[T]):
     qualname: str
     """
     The qualified identifier name for this object. For example, if we have the following code:
-    
+
     ```python
     class Foo:
         def bar(self):
             pass
     ```
-    
+
     The qualname of `Foo`'s `bar` method is `Foo.bar`. The qualname of the `Foo` class is just `Foo`.
-    
+
     See <https://www.python.org/dev/peps/pep-3155/> for details.
     """
 
@@ -289,7 +289,7 @@ class Namespace(Doc[T], metaclass=ABCMeta):
                 doc.source = doc_f.source
                 doc.source_file = doc_f.source_file
                 doc.source_lines = doc_f.source_lines
-            elif inspect.isroutine(obj):
+            elif inspect.isroutine(obj) or type(obj).__name__ == 'nb_func':
                 doc = Function(self.modulename, qualname, obj, taken_from)  # type: ignore
             elif (
                 inspect.isclass(obj)
@@ -317,7 +317,7 @@ class Namespace(Doc[T], metaclass=ABCMeta):
                 doc = Variable(
                     self.modulename,
                     qualname,
-                    docstring="",
+                    docstring=getattr(obj, "__doc__", None) or "",
                     annotation=self._var_annotations.get(name, empty),
                     default_value=obj,
                     taken_from=taken_from,
@@ -1051,7 +1051,7 @@ class Variable(Doc[None]):
     )  # technically Any includes empty, but this conveys intent.
     """
     The variable's default value.
-    
+
     In some cases, no default value is known. This may either be because a variable is only defined in the constructor,
     or it is only declared with a type annotation without assignment (`foo: int`).
     To distinguish this case from a default value of `None`, `pdoc.doc_types.empty` is used as a placeholder.
@@ -1060,7 +1060,7 @@ class Variable(Doc[None]):
     annotation: type | empty
     """
     The variable's type annotation.
-    
+
     If there is no type annotation, `pdoc.doc_types.empty` is used as a placeholder.
     """
 
